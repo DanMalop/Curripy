@@ -9,8 +9,9 @@ class job:
         self.company = company
         self.start_date = start_date
         self.end_date = end_date
-        self.functions = []
-        self.achievements = []
+        self.functions: list[str] = []
+        self.achievements: list[str] = []
+        self.visible: bool = True
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -30,29 +31,44 @@ class job:
     def add_achievement(self, achievement: str):
         self.achievements.append(achievement)
 
+    def set_visibel(self, visible_set: bool):
+        self.visible = visible_set
 
-# trabajo = job("asesor comercial", "Expertquim", date(2024, 9, 25), date(2025, 2, 14))
 
+trabajo = job("asesor comercial", "Expertquim", date(2024, 9, 25), date(2025, 2, 14))
+trabajo.add_function("mamar huevo")
+print(trabajo)
 
 class study:
-    def __init__(self, institution: str, title: str, degree_date: date) -> None:
-        self.institution = institution
+    def __init__(self, title: str, institution: str, degree_date: date) -> None:
         self.title = title
+        self.institution = institution
         self.degree_date = degree_date
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
         return f"""
         class = {cls}
-        institution = {self.institution}
         title = {self.title}
+        institution = {self.institution}
         degree_date = {self.degree_date}
         """
 
 
 class course:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, course_name: str, institution: str, certificate_date: date) -> None:
+        self.course_name = course_name
+        self.institution = institution
+        self.certificate_date = certificate_date
+
+    def __repr__(self):
+        cls = self.__class__.__name__
+        return f"""
+        clase = {cls}
+        course_name = {self.course_name}
+        institution = {self.institution}
+        certificate_date = {self.certificate_date}
+        """
 
 
 class user:
@@ -74,4 +90,24 @@ class user:
         cls = self.__class__.__name__
         return f"""
         class = {cls}
-    """
+        name = {self.name}
+        lastname = {self.lastname}
+        phone = {self.phone}
+        email = {self.email}
+        linkedin = {self.linkedin}
+        """
+
+    def update_description(self, text_description: str):
+        self.description = text_description
+
+    def update_photo(self, image):
+        self.phone = image
+
+    def add_work_experience(self, work_exp: job):
+        self.work_experience.append(work)
+
+    def add_studies(self, study_exp: study):
+        self.studies.append(study_exp)
+
+    def add_courses(self, course_exp: course):
+        self.courses.append(course)
