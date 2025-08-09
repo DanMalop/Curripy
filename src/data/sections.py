@@ -1,7 +1,7 @@
 from datetime import date
 
 
-class job:
+class Job:
     def __init__(
         self, position: str, company: str, start_date: date, end_date: date
     ) -> None:
@@ -35,11 +35,12 @@ class job:
         self.visible = visible_set
 
 
-trabajo = job("asesor comercial", "Expertquim", date(2024, 9, 25), date(2025, 2, 14))
+trabajo = Job("asesor comercial", "Expertquim", date(2024, 9, 25), date(2025, 2, 14))
 trabajo.add_function("mamar huevo")
 print(trabajo)
 
-class study:
+
+class Study:
     def __init__(self, title: str, institution: str, degree_date: date) -> None:
         self.title = title
         self.institution = institution
@@ -55,8 +56,10 @@ class study:
         """
 
 
-class course:
-    def __init__(self, course_name: str, institution: str, certificate_date: date) -> None:
+class Course:
+    def __init__(
+        self, course_name: str, institution: str, certificate_date: date
+    ) -> None:
         self.course_name = course_name
         self.institution = institution
         self.certificate_date = certificate_date
@@ -71,7 +74,7 @@ class course:
         """
 
 
-class user:
+class Curriculum:
     def __init__(
         self, name: str, lastname: str, phone: int, email: str, linkedin: str
     ) -> None:
@@ -103,11 +106,11 @@ class user:
     def update_photo(self, image):
         self.phone = image
 
-    def add_work_experience(self, work_exp: job):
-        self.work_experience.append(work)
+    def add_work_experience(self, work_exp: Job):
+        self.work_experience.append(work_exp)
 
-    def add_studies(self, study_exp: study):
+    def add_studies(self, study_exp: Study):
         self.studies.append(study_exp)
 
-    def add_courses(self, course_exp: course):
-        self.courses.append(course)
+    def add_courses(self, course_exp: Course):
+        self.courses.append(course_exp)
