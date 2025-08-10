@@ -56,22 +56,15 @@ class Study:
         """
 
 
-class Course:
+class Comp_study(Study):
     def __init__(
         self, course_name: str, institution: str, certificate_date: date
     ) -> None:
-        self.course_name = course_name
-        self.institution = institution
-        self.certificate_date = certificate_date
+        super().__init__(course_name, institution, certificate_date)
 
-    def __repr__(self):
-        cls = self.__class__.__name__
-        return f"""
-        clase = {cls}
-        course_name = {self.course_name}
-        institution = {self.institution}
-        certificate_date = {self.certificate_date}
-        """
+
+sena = Comp_study("aguas", "sena", date(2020, 12, 12))
+print(sena)
 
 
 class Curriculum:
@@ -112,5 +105,5 @@ class Curriculum:
     def add_studies(self, study_exp: Study):
         self.studies.append(study_exp)
 
-    def add_courses(self, course_exp: Course):
-        self.courses.append(course_exp)
+    def add_courses(self, Comp_study_exp: Comp_study):
+        self.courses.append(Comp_study_exp)
