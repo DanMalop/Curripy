@@ -1,22 +1,55 @@
 from datetime import date
 
 
-class Job:
-    def __init__(
-        self, position: str, company: str, start_date: date, end_date: date
-    ) -> None:
-        self.position = position
-        self.company = company
-        self.start_date = start_date
-        self.end_date = end_date
-        self.functions: list[str] = []
-        self.achievements: list[str] = []
+class Curriculum_item:
+    def __init__(self) -> None:
         self.visible: bool = True
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
+        return f"""clase = {cls}
+        visible = {self.visible}"""
+
+    def set_visible(self, visible_set: bool):
+        self.visible = visible_set
+
+
+class Job_detail(Curriculum_item):
+    def __init__(self, content) -> None:
+        super().__init__()
+        self.content = content
+
+    def __repr__(self) -> str:
+        return f""" {super().__repr__()}
+        description = {self.content}"""
+
+
+class Job_function(Job_detail):
+    def __init__(self, content) -> None:
+        super().__init__(content)
+
+
+class Job_achievement(Job_detail):
+    def __init__(self, content) -> None:
+        super().__init__(content)
+
+
+class Job(Curriculum_item):
+    def __init__(
+        self, position: str, company: str, start_date: date, end_date: date
+    ) -> None:
+        super().__init__()
+        self.position = position
+        self.company = company
+        self.start_date = start_date
+        self.end_date = end_date
+        self.functions: list[Job_function] = []
+        self.achievements: list[Job_achievement] = []
+
+    def __repr__(self) -> str:
+        cls = self.__class__.__name__
         return f"""
-        class = {cls}
+        {super().__repr__()}
         position = {self.position}
         company = {self.company}
         start_date = {self.start_date}
@@ -25,31 +58,29 @@ class Job:
         achievements = {self.achievements}
         """
 
-    def add_function(self, function: str):
+    def add_function(self, function: Job_function):
         self.functions.append(function)
 
-    def add_achievement(self, achievement: str):
+    def add_achievement(self, achievement: Job_achievement):
         self.achievements.append(achievement)
-
-    def set_visibel(self, visible_set: bool):
-        self.visible = visible_set
 
 
 trabajo = Job("asesor comercial", "Expertquim", date(2024, 9, 25), date(2025, 2, 14))
-trabajo.add_function("mamar huevo")
 print(trabajo)
 
 
-class Study:
+class Study(Curriculum_item):
     def __init__(self, title: str, institution: str, degree_date: date) -> None:
+        super().__init__()
         self.title = title
         self.institution = institution
         self.degree_date = degree_date
+        self.visible: bool = True
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
         return f"""
-        class = {cls}
+        {super().__repr__()}
         title = {self.title}
         institution = {self.institution}
         degree_date = {self.degree_date}
@@ -64,6 +95,7 @@ class Comp_study(Study):
 
 
 sena = Comp_study("aguas", "sena", date(2020, 12, 12))
+sena.set_visible(False)
 print(sena)
 
 
@@ -76,11 +108,11 @@ class Curriculum:
         self.phone = phone
         self.email = email
         self.linkedin = linkedin
-        self.description = None
+        self.summary = None
         self.photo = None
-        self.work_experience = []
-        self.studies = []
-        self.courses = []
+        self.work_experience: list[Job] = []
+        self.studies: list[Study] = []
+        self.courses: list[Comp_study] = []
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -91,10 +123,11 @@ class Curriculum:
         phone = {self.phone}
         email = {self.email}
         linkedin = {self.linkedin}
+        summary = {self.summary}
         """
 
-    def update_description(self, text_description: str):
-        self.description = text_description
+    def update_description(self, summary: str):
+        self.summary = summary
 
     def update_photo(self, image):
         self.phone = image
