@@ -1,5 +1,5 @@
 import sqlite3
-from .sections import Curriculum, Job, Study, Course
+from .sections import Curriculum, Job, Study, Comp_study
 
 
 class DB_manager:
