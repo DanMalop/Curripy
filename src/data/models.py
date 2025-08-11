@@ -75,7 +75,6 @@ class Study(Curriculum_item):
         self.title = title
         self.institution = institution
         self.degree_date = degree_date
-        self.visible: bool = True
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -109,10 +108,10 @@ class Curriculum:
         self.email = email
         self.linkedin = linkedin
         self.summary = None
-        self.photo = None
-        self.work_experience: list[Job] = []
+        self.photo = None  # Image path
+        self.jobs: list[Job] = []
         self.studies: list[Study] = []
-        self.courses: list[Comp_study] = []
+        self.comp_studies: list[Comp_study] = []
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -133,10 +132,10 @@ class Curriculum:
         self.phone = image
 
     def add_work_experience(self, work_exp: Job):
-        self.work_experience.append(work_exp)
+        self.jobs.append(work_exp)
 
     def add_studies(self, study_exp: Study):
         self.studies.append(study_exp)
 
     def add_courses(self, Comp_study_exp: Comp_study):
-        self.courses.append(Comp_study_exp)
+        self.comp_studies.append(Comp_study_exp)
