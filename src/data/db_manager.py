@@ -1,123 +1,34 @@
-from datetime import date
-from typing import List
-from sqlalchemy import ForeignKey, String, Date, Integer, Boolean, create_engine
+from typing import Union
+from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    relationship,
-    session,
     sessionmaker,
 )
+# import traceback
 
-from data.models import Curriculum
+from models import Comp_study, Curriculum, Job, Job_achievement, Job_function, Study, hv
+from db_models import (
+    Base,
+    Job_db,
+    Job_function_db,
+    Job_achievement_db,
+    Study_db,
+    Comp_study_db,
+    Curriculum_db,
+)
 
-
-# -----------------------------------------------------------------------------------------------------------
-#                            ORM table classes
-# ----------------------------------------------------------------------------------------------------------
-
-
-class Base(DeclarativeBase):
-    pass
-
-
-class Curriculum_db(Base):
-    __tablename__ = "curriculums"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String)
-    lastname: Mapped[str] = mapped_column(String)
-    phone: Mapped[int] = mapped_column(Integer)
-    email: Mapped[str] = mapped_column(String)
-    linkedin: Mapped[str] = mapped_column(String)
-    summary: Mapped[str] = mapped_column(String, nullable=True)
-    photo: Mapped[str] = mapped_column(String, nullable=True)
-
-    jobs: Mapped[List["Job_db"]] = relationship(
-        back_populates="curriculums", cascade="all, delete-orphan"
-    )
-
-    studies: Mapped[List["Study_db"]] = relationship(
-        back_populates="curriculums", cascade="all, delete-orphan"
-    )
-
-    comp_studies: Mapped[List["Comp_study_db"]] = relationship(
-        back_populates="curriculums", cascade="all, delete-orphan"
-    )
+# ----------------------------------------------------------------#
+#                     DataBase manager class                      #
+# ----------------------------------------------------------------#
 
 
-class Job_db(Base):
-    __tablename__ = "jobs"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    position: Mapped[str] = mapped_column(String)
-    company: Mapped[str] = mapped_column(String)
-    start_date: Mapped[date] = mapped_column(Date)
-    end_date: Mapped[date] = mapped_column(Date)
-    visible: Mapped[bool] = mapped_column(Boolean)
-
-    job_functions: Mapped[List["Job_function_db"]] = relationship(
-        back_populates="jobs", cascade="all, delete-orphan"
-    )
-
-    job_achievements: Mapped[List["Job_achievement_db"]] = relationship(
-        back_populates="jobs", cascade="all, delete-orphan"
-    )
-
-    curriculums: Mapped["Curriculum_db"] = relationship(back_populates="jobs")
-
-
-class Job_function_db(Base):
-    __tablename__ = "job_functions"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    content: Mapped[str] = mapped_column(String)
-    visible: Mapped[bool] = mapped_column(Boolean)
-    jobs_id = mapped_column(Integer, ForeignKey("jobs.id"))
-
-    jobs: Mapped["Job_db"] = relationship(back_populates="job_functions")
-
-
-class Job_achievement_db(Base):
-    __tablename__ = "job_achievements"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    content: Mapped[str] = mapped_column(String)
-    visible: Mapped[bool] = mapped_column(Boolean)
-    jobs_id = mapped_column(Integer, ForeignKey("jobs.id"))
-
-    jobs: Mapped["Job_db"] = relationship(back_populates="job_achievements")
-
-
-class Study_db(Base):
-    __tablename__ = "studies"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String)
-    institution: Mapped[str] = mapped_column(String)
-    degree_date: Mapped[date] = mapped_column(Date)
-    visible: Mapped[bool] = mapped_column(Boolean)
-
-    curriculums: Mapped["Curriculum_db"] = relationship(back_populates="studies")
-
-
-class Comp_study_db(Base):
-    __tablename__ = "comp_studies"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String)
-    institution: Mapped[str] = mapped_column(String)
-    degree_date: Mapped[date] = mapped_column(Date)
-    visible: Mapped[bool] = mapped_column(Boolean)
-
-    curriculums: Mapped["Curriculum_db"] = relationship(back_populates="comp_studies")
-
-
-# -----------------------------------------------------------------------------------------------------------
-#                            DataBase manager class
-# ----------------------------------------------------------------------------------------------------------
-
-
-class db_manager:
+class Db_manager:
     def __init__(self, db_file: str = "curripy.db") -> None:
         self.engine = create_engine(f"sqlite:///{db_file}", echo=True)
         self.Session = sessionmaker(bind=self.engine)
+        self._create_tables()
+
+    # ------------------- / Create tables /------------------------#
 
     def _create_tables(self):
         # Create tables in the database if doesn't exist
@@ -128,15 +39,15 @@ class db_manager:
 
         except SQLAlchemyError as e:
             print(f"Error al crear las tablas: {e}")
+            # traceback.print_exc()
 
-    # ----------------------------- / Save curriculum / -------------------------------
+    # ----------------- / Save curriculum / ----------------------#
 
     def save_curriculum(self, curriculum_obj: Curriculum):
         # Save all the Curriculum objet in the database
         session = self.Session()
 
         try:
-            # create a database object from the model object
             curriculum_db = Curriculum_db(
                 name=curriculum_obj.name,
                 lastname=curriculum_obj.lastname,
@@ -144,6 +55,7 @@ class db_manager:
                 email=curriculum_obj.email,
                 linkedin=curriculum_obj.linkedin,
                 summary=curriculum_obj.summary,
+                photo=curriculum_obj.photo,
             )
 
             # Mapping jobs
@@ -161,14 +73,14 @@ class db_manager:
                     job_function_db = Job_function_db(
                         visible=function_obj.visible, content=function_obj.content
                     )
-                    job_db.job_functions.append(job_function_db)
+                    job_db.functions.append(job_function_db)
 
                 # Mapping job achievements
                 for achievement_obj in job_obj.achievements:
-                    job_achievement_db = Job_achievement_db(
+                    job_achievement_out = Job_achievement_db(
                         visible=achievement_obj.visible, content=achievement_obj.content
                     )
-                    job_db.job_achievements.append(job_achievement_db)
+                    job_db.achievements.append(job_achievement_out)
 
                 curriculum_db.jobs.append(job_db)
 
@@ -200,12 +112,122 @@ class db_manager:
         except SQLAlchemyError as e:
             session.rollback()
             print(f"Error saving curriculum: {e}")
-            return None
+            # traceback.print_exc()
+            return 0
 
         finally:
             session.close()
 
-    # ---------------------- / Get curriculums / ------------------------
+    # ---------------- / Get curriculum / --------------------#
 
     def get_curriculum(self, curriculum_id: int):
         session = self.Session()
+        try:
+            curriculum_db = (
+                session.query(Curriculum_db).filter_by(id=curriculum_id).first()
+            )
+            if not curriculum_db:
+                return None
+
+            curriculum_obj = Curriculum(
+                name=curriculum_db.name,
+                lastname=curriculum_db.lastname,
+                phone=curriculum_db.phone,
+                email=curriculum_db.email,
+                linkedin=curriculum_db.linkedin,
+                summary=curriculum_db.summary,
+                photo=curriculum_db.photo,
+            )
+
+            # Mapping jobs
+            for job_db in curriculum_db.jobs:
+                job_obj = Job(
+                    visible=job_db.visible,
+                    position=job_db.position,
+                    company=job_db.company,
+                    start_date=job_db.start_date,
+                    end_date=job_db.end_date,
+                )
+
+                # Mapping job functions
+                for function_db in job_db.functions:
+                    job_function_obj = Job_function(
+                        visible=function_db.visible, content=function_db.content
+                    )
+                    job_obj.functions.append(job_function_obj)
+
+                # Mapping job achievements
+                for achievement_db in job_db.achievements:
+                    job_achievement_obj = Job_achievement(
+                        visible=achievement_db.visible, content=achievement_db.content
+                    )
+                    job_obj.achievements.append(job_achievement_obj)
+
+                curriculum_obj.jobs.append(job_obj)
+
+            # Mapping studies
+            for study_db in curriculum_db.studies:
+                study_obj = Study(
+                    visible=study_db.visible,
+                    title=study_db.title,
+                    institution=study_db.institution,
+                    degree_date=study_db.degree_date,
+                )
+                curriculum_obj.studies.append(study_obj)
+
+            # Mapping complementary studies
+            for comp_study_db in curriculum_db.comp_studies:
+                comp_study_obj = Comp_study(
+                    visible=comp_study_db.visible,
+                    title=comp_study_db.title,
+                    institution=comp_study_db.institution,
+                    degree_date=comp_study_db.degree_date,
+                )
+                curriculum_obj.comp_studies.append(comp_study_obj)
+
+            return curriculum_obj
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Error getting curriculum: {e}")
+            # return None
+
+        finally:
+            session.close()
+
+    # ------------------- Update curriculum ----------------------#
+
+    def update_curriculum(self, curriculum_id: int, updated_data: Curriculum):
+        session = self.Session()
+
+        try:
+            curriculum_db = (
+                session.query(Curriculum_db).filter_by(id=curriculum_id).first()
+            )
+            if not curriculum_db:
+                return False
+
+            curriculum_db.name = updated_data.name
+            curriculum_db.lastname = updated_data.lastname
+            curriculum_db.phone = updated_data.phone
+            curriculum_db.email = updated_data.email
+            curriculum_db.linkedin = updated_data.linkedin
+            curriculum_db.summary = updated_data.summary
+            curriculum_db.photo = updated_data.photo
+
+            session.commit()
+            return True
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            print(f"Error updating the curriculum: {e}")
+            return False
+
+        finally:
+            session.close()
+
+
+database = Db_manager()
+curricu = database.get_curriculum(1)
+
+print(curricu.__repr__())

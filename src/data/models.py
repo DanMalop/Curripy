@@ -2,8 +2,8 @@ from datetime import date
 
 
 class Curriculum_item:
-    def __init__(self) -> None:
-        self.visible: bool = True
+    def __init__(self, visible: bool = True) -> None:
+        self.visible = visible
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
@@ -15,8 +15,8 @@ class Curriculum_item:
 
 
 class Job_detail(Curriculum_item):
-    def __init__(self, content) -> None:
-        super().__init__()
+    def __init__(self, content, visible=True) -> None:
+        super().__init__(visible)
         self.content = content
 
     def __repr__(self) -> str:
@@ -25,20 +25,25 @@ class Job_detail(Curriculum_item):
 
 
 class Job_function(Job_detail):
-    def __init__(self, content) -> None:
-        super().__init__(content)
+    def __init__(self, content, visible=True) -> None:
+        super().__init__(content, visible)
 
 
 class Job_achievement(Job_detail):
-    def __init__(self, content) -> None:
-        super().__init__(content)
+    def __init__(self, content, visible=True) -> None:
+        super().__init__(content, visible)
 
 
 class Job(Curriculum_item):
     def __init__(
-        self, position: str, company: str, start_date: date, end_date: date
+        self,
+        position: str,
+        company: str,
+        start_date: date,
+        end_date: date,
+        visible=True,
     ) -> None:
-        super().__init__()
+        super().__init__(visible)
         self.position = position
         self.company = company
         self.start_date = start_date
@@ -58,20 +63,18 @@ class Job(Curriculum_item):
         achievements = {self.achievements}
         """
 
-    def add_function(self, function: Job_function):
-        self.functions.append(function)
+    def add_function(self, list_functions: list[Job_function]):
+        self.functions += list_functions
 
-    def add_achievement(self, achievement: Job_achievement):
-        self.achievements.append(achievement)
-
-
-trabajo = Job("asesor comercial", "Expertquim", date(2024, 9, 25), date(2025, 2, 14))
-print(trabajo)
+    def add_achievement(self, list_achievements: list[Job_achievement]):
+        self.achievements = list_achievements
 
 
 class Study(Curriculum_item):
-    def __init__(self, title: str, institution: str, degree_date: date) -> None:
-        super().__init__()
+    def __init__(
+        self, title: str, institution: str, degree_date: date, visible=True
+    ) -> None:
+        super().__init__(visible)
         self.title = title
         self.institution = institution
         self.degree_date = degree_date
@@ -88,27 +91,30 @@ class Study(Curriculum_item):
 
 class Comp_study(Study):
     def __init__(
-        self, course_name: str, institution: str, certificate_date: date
+        self, title: str, institution: str, degree_date: date, visible=True
     ) -> None:
-        super().__init__(course_name, institution, certificate_date)
-
-
-sena = Comp_study("aguas", "sena", date(2020, 12, 12))
-sena.set_visible(False)
-print(sena)
+        super().__init__(title, institution, degree_date, visible)
 
 
 class Curriculum:
     def __init__(
-        self, name: str, lastname: str, phone: int, email: str, linkedin: str
+        self,
+        name: str,
+        lastname: str,
+        phone: str,
+        email: str,
+        linkedin: str,
+        summary: str,
+        photo: str,
     ) -> None:
+        self._id = 0
         self.name = name
         self.lastname = lastname
         self.phone = phone
         self.email = email
         self.linkedin = linkedin
-        self.summary = None
-        self.photo = None  # Image path
+        self.summary = summary
+        self.photo = photo  # Image path
         self.jobs: list[Job] = []
         self.studies: list[Study] = []
         self.comp_studies: list[Comp_study] = []
@@ -125,17 +131,47 @@ class Curriculum:
         summary = {self.summary}
         """
 
+    def set_id(self, curriculum_id: int):
+        self._id = curriculum_id
+        return True
+
+    def get_id(self):
+        return self._id
+
     def update_description(self, summary: str):
         self.summary = summary
 
     def update_photo(self, image):
         self.phone = image
 
-    def add_work_experience(self, work_exp: Job):
-        self.jobs.append(work_exp)
+    def add_jobs(self, work_exp: list[Job]):
+        self.jobs += work_exp
 
-    def add_studies(self, study_exp: Study):
-        self.studies.append(study_exp)
+    def add_studies(self, study_exp: list[Study]):
+        self.studies += study_exp
 
-    def add_courses(self, Comp_study_exp: Comp_study):
-        self.comp_studies.append(Comp_study_exp)
+    def add_comp_studies(self, Comp_study_exp: list[Comp_study]):
+        self.comp_studies += Comp_study_exp
+
+
+function1 = Job_function("mamar")
+function1 = Job_function("peer")
+achievement1 = Job_achievement("cagar mucho")
+achievement2 = Job_achievement("peer mucho")
+trabajo1 = Job("cagador", "cagaderia", date(2021, 4, 21), date(2024, 3, 12))
+trabajo1.add_achievement([achievement1, achievement2])
+estudio1 = Study("ing cagalera", "inst cagare", date(2020, 2, 3))
+curso1 = Comp_study("peos op", "inst peare", date(2019, 5, 19))
+hv = Curriculum(
+    "Dany",
+    "Peo",
+    "1234",
+    "bollo@pmail.com",
+    "https: peo",
+    "soy el mejor peador y cagador de la historia humana",
+    "/cagada",
+)
+
+hv.add_comp_studies([curso1])
+hv.add_studies([estudio1])
+hv.add_jobs([trabajo1])
