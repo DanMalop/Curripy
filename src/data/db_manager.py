@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Type, TypeVar
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import (
@@ -16,6 +16,97 @@ from db_models import (
     Comp_study_db,
     Curriculum_db,
 )
+
+# --------------------------------------------------------------------#
+#            Function Map obj to db model or viceversa               #
+# --------------------------------------------------------------------#
+
+T = TypeVar("T")
+
+
+def map_objects(source_obj: object, target_class: Type[T]) -> T:
+    # this funciton mapped the domain object to a SQLAlchemy model or viceversa
+    is_source_model = hasattr(source_obj, "__table__")
+
+    if hasattr(target_class, "__table__"):
+        columns_model = target_class.__table__.columns
+        save = True
+    elif is_source_model:
+        columns_model = source_obj.__table__.columns
+        save = False
+    else:
+        raise ValueError("Not detected any SQLAlchemy model in the mapping")
+
+    if save:
+        camps = {
+            c.name: getattr(source_obj, c.name)
+            for c in columns_model
+            if hasattr(source_obj, c.name) and "_id" not in c.name and "id" != c.name
+        }
+
+    else:
+        camps = {
+            c.name: getattr(source_obj, c.name)
+            for c in columns_model
+            if hasattr(source_obj, c.name) and "_id" not in c.name
+        }
+
+    return target_class(**camps)
+
+
+def map_all_objets(source_curriculum: object):
+    if hasattr(source_curriculum, "__table__"):
+        target_classes = [
+            Curriculum,
+            Job,
+            Job_function,
+            Job_achievement,
+            Study,
+            Comp_study,
+        ]
+    elif source_curriculum.__class__.__name__ == "Curriculum":
+        target_classes = [
+            Curriculum_db,
+            Job_db,
+            Job_function_db,
+            Job_achievement_db,
+            Study_db,
+            Comp_study_db,
+        ]
+    else:
+        raise ValueError(
+            "Not detected any SQLAlchemy model or Curriculum class in the mapping"
+        )
+
+    curriculum_out = map_objects(source_curriculum, target_classes[0])
+
+    # Mapping jobs
+    for source_job in source_curriculum.jobs:
+        job_out = map_objects(source_job, target_classes[1])
+        # Mapping job functions
+        for source_function in source_job.functions:
+            job_function_out = map_objects(source_function, target_classes[2])
+            job_out.functions.append(job_function_out)
+
+        # Mapping job achievements
+        for source_achievement in source_job.achievements:
+            job_achievement_out = map_objects(source_achievement, target_classes[3])
+            job_out.achievements.append(job_achievement_out)
+
+        curriculum_out.jobs.append(job_out)
+
+        # Mapping studies
+    for source_study in source_curriculum.studies:
+        study_out = map_objects(source_study, target_classes[4])
+        curriculum_out.studies.append(study_out)
+
+    # Mapping complementary studies
+    for source_comp_study in source_curriculum.comp_studies:
+        comp_study_out = map_objects(source_comp_study, target_classes[5])
+        curriculum_out.comp_studies.append(comp_study_out)
+
+    return curriculum_out
+
 
 # ----------------------------------------------------------------#
 #                     DataBase manager class                      #
@@ -48,62 +139,7 @@ class Db_manager:
         session = self.Session()
 
         try:
-            curriculum_db = Curriculum_db(
-                name=curriculum_obj.name,
-                lastname=curriculum_obj.lastname,
-                phone=curriculum_obj.phone,
-                email=curriculum_obj.email,
-                linkedin=curriculum_obj.linkedin,
-                summary=curriculum_obj.summary,
-                photo=curriculum_obj.photo,
-            )
-
-            # Mapping jobs
-            for job_obj in curriculum_obj.jobs:
-                job_db = Job_db(
-                    visible=job_obj.visible,
-                    position=job_obj.position,
-                    company=job_obj.company,
-                    start_date=job_obj.start_date,
-                    end_date=job_obj.end_date,
-                )
-
-                # Mapping job functions
-                for function_obj in job_obj.functions:
-                    job_function_db = Job_function_db(
-                        visible=function_obj.visible, content=function_obj.content
-                    )
-                    job_db.functions.append(job_function_db)
-
-                # Mapping job achievements
-                for achievement_obj in job_obj.achievements:
-                    job_achievement_out = Job_achievement_db(
-                        visible=achievement_obj.visible, content=achievement_obj.content
-                    )
-                    job_db.achievements.append(job_achievement_out)
-
-                curriculum_db.jobs.append(job_db)
-
-            # Mapping studies
-            for study_obj in curriculum_obj.studies:
-                study_db = Study_db(
-                    visible=study_obj.visible,
-                    title=study_obj.title,
-                    institution=study_obj.institution,
-                    degree_date=study_obj.degree_date,
-                )
-                curriculum_db.studies.append(study_db)
-
-            # Mapping complementary studies
-            for comp_study_obj in curriculum_obj.comp_studies:
-                comp_study_db = Comp_study_db(
-                    visible=comp_study_obj.visible,
-                    title=comp_study_obj.title,
-                    institution=comp_study_obj.institution,
-                    degree_date=comp_study_obj.degree_date,
-                )
-                curriculum_db.comp_studies.append(comp_study_db)
-
+            curriculum_db = map_all_objets(curriculum_obj)
             session.add(curriculum_db)
             session.commit()
 
@@ -129,62 +165,7 @@ class Db_manager:
             if not curriculum_db:
                 return None
 
-            curriculum_obj = Curriculum(
-                name=curriculum_db.name,
-                lastname=curriculum_db.lastname,
-                phone=curriculum_db.phone,
-                email=curriculum_db.email,
-                linkedin=curriculum_db.linkedin,
-                summary=curriculum_db.summary,
-                photo=curriculum_db.photo,
-            )
-
-            # Mapping jobs
-            for job_db in curriculum_db.jobs:
-                job_obj = Job(
-                    visible=job_db.visible,
-                    position=job_db.position,
-                    company=job_db.company,
-                    start_date=job_db.start_date,
-                    end_date=job_db.end_date,
-                )
-
-                # Mapping job functions
-                for function_db in job_db.functions:
-                    job_function_obj = Job_function(
-                        visible=function_db.visible, content=function_db.content
-                    )
-                    job_obj.functions.append(job_function_obj)
-
-                # Mapping job achievements
-                for achievement_db in job_db.achievements:
-                    job_achievement_obj = Job_achievement(
-                        visible=achievement_db.visible, content=achievement_db.content
-                    )
-                    job_obj.achievements.append(job_achievement_obj)
-
-                curriculum_obj.jobs.append(job_obj)
-
-            # Mapping studies
-            for study_db in curriculum_db.studies:
-                study_obj = Study(
-                    visible=study_db.visible,
-                    title=study_db.title,
-                    institution=study_db.institution,
-                    degree_date=study_db.degree_date,
-                )
-                curriculum_obj.studies.append(study_obj)
-
-            # Mapping complementary studies
-            for comp_study_db in curriculum_db.comp_studies:
-                comp_study_obj = Comp_study(
-                    visible=comp_study_db.visible,
-                    title=comp_study_db.title,
-                    institution=comp_study_db.institution,
-                    degree_date=comp_study_db.degree_date,
-                )
-                curriculum_obj.comp_studies.append(comp_study_obj)
-
+            curriculum_obj = map_all_objets(curriculum_db)
             return curriculum_obj
 
         except SQLAlchemyError as e:
@@ -228,6 +209,7 @@ class Db_manager:
 
 
 database = Db_manager()
-curricu = database.get_curriculum(1)
-
-print(curricu.__repr__())
+id = database.save_curriculum(hv)
+hv.set_id(id)
+print(id)
+print(hv.__repr__())

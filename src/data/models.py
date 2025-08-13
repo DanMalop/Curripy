@@ -2,12 +2,14 @@ from datetime import date
 
 
 class Curriculum_item:
-    def __init__(self, visible: bool = True) -> None:
+    def __init__(self, id: int = 0, visible: bool = True) -> None:
+        self.id = id
         self.visible = visible
 
     def __repr__(self) -> str:
         cls = self.__class__.__name__
         return f"""clase = {cls}
+        id = {self.id}
         visible = {self.visible}"""
 
     def set_visible(self, visible_set: bool):
@@ -15,8 +17,8 @@ class Curriculum_item:
 
 
 class Job_detail(Curriculum_item):
-    def __init__(self, content, visible=True) -> None:
-        super().__init__(visible)
+    def __init__(self, content: str, id: int = 0, visible=True) -> None:
+        super().__init__(id, visible)
         self.content = content
 
     def __repr__(self) -> str:
@@ -25,13 +27,13 @@ class Job_detail(Curriculum_item):
 
 
 class Job_function(Job_detail):
-    def __init__(self, content, visible=True) -> None:
-        super().__init__(content, visible)
+    def __init__(self, content: str, id: int = 0, visible=True) -> None:
+        super().__init__(content, id, visible)
 
 
 class Job_achievement(Job_detail):
-    def __init__(self, content, visible=True) -> None:
-        super().__init__(content, visible)
+    def __init__(self, content: str, id: int = 0, visible=True) -> None:
+        super().__init__(content, id, visible)
 
 
 class Job(Curriculum_item):
@@ -41,9 +43,10 @@ class Job(Curriculum_item):
         company: str,
         start_date: date,
         end_date: date,
+        id: int = 0,
         visible=True,
     ) -> None:
-        super().__init__(visible)
+        super().__init__(id, visible)
         self.position = position
         self.company = company
         self.start_date = start_date
@@ -52,7 +55,6 @@ class Job(Curriculum_item):
         self.achievements: list[Job_achievement] = []
 
     def __repr__(self) -> str:
-        cls = self.__class__.__name__
         return f"""
         {super().__repr__()}
         position = {self.position}
@@ -72,15 +74,14 @@ class Job(Curriculum_item):
 
 class Study(Curriculum_item):
     def __init__(
-        self, title: str, institution: str, degree_date: date, visible=True
+        self, title: str, institution: str, degree_date: date, id: int = 0, visible=True
     ) -> None:
-        super().__init__(visible)
+        super().__init__(id, visible)
         self.title = title
         self.institution = institution
         self.degree_date = degree_date
 
     def __repr__(self) -> str:
-        cls = self.__class__.__name__
         return f"""
         {super().__repr__()}
         title = {self.title}
@@ -91,9 +92,9 @@ class Study(Curriculum_item):
 
 class Comp_study(Study):
     def __init__(
-        self, title: str, institution: str, degree_date: date, visible=True
+        self, title: str, institution: str, degree_date: date, id: int = 0, visible=True
     ) -> None:
-        super().__init__(title, institution, degree_date, visible)
+        super().__init__(title, institution, degree_date, id, visible)
 
 
 class Curriculum:
@@ -106,8 +107,9 @@ class Curriculum:
         linkedin: str,
         summary: str,
         photo: str,
+        id: int = 0,
     ) -> None:
-        self._id = 0
+        self.id = id
         self.name = name
         self.lastname = lastname
         self.phone = phone
@@ -123,6 +125,7 @@ class Curriculum:
         cls = self.__class__.__name__
         return f"""
         class = {cls}
+        id = {self.id}
         name = {self.name}
         lastname = {self.lastname}
         phone = {self.phone}
@@ -132,11 +135,11 @@ class Curriculum:
         """
 
     def set_id(self, curriculum_id: int):
-        self._id = curriculum_id
+        self.id = curriculum_id
         return True
 
     def get_id(self):
-        return self._id
+        return self.id
 
     def update_description(self, summary: str):
         self.summary = summary
